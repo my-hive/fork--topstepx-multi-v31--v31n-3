@@ -1,0 +1,53 @@
+# v31n-3 mechanism notes (development only)
+
+## Accounting facts that dominate candidate design
+
+1. **Data gaps are expensive.** `run_days` flattens at the prior close whenever the
+   next bar is not exactly +1 minute, same contract, same session, and a still-nonzero
+   target re-enters at the next open. One missing minute therefore costs a full
+   stressed round trip. Sparse early standard contracts (NQ/ES 2010-2012, MGC before
+   2019) lose $100k+/year from churn alone, which is why apparently large segment
+   drifts do not survive there. Dense recent micros (MNQ/MES 2019+) pay roughly one
+   extra round trip per session.
+2. **Cost floor.** Stressed round trip = 4 ticks of slippage + 3x base commission:
+   MNQ x5 $21.25, NQ $27.50, ES $57.50, ZN $70.00, 6E $32.50. Unconditional segment
+   drifts in rates/FX/metals ($2-25/day) sit below their cost floor; only equity
+   index drift clears it.
+3. **Pass-rate geometry.** Rolling 30-session attempts need +$3000 before a
+   $2000 peak-to-valley breach, daily adverse $1000 lock, best day < 50% of profit.
+   Synthetic calibration with `sim.attempts`: mean $100/day with $200-400 daily std
+   gives 0.54-0.58; mean $25/day with $400 std gives 0.27; tiny std causes timeouts,
+   huge std causes MLL failure. Real MNQ x5 RTH-long has mean $17/day, std $949,
+   28% of days touch the daily loss lock, 74% of attempts end in MLL breach. Position
+   size alone cannot fix a low daily Sharpe; it only moves the failure mode.
+
+## Failed approach kept on record (leakage)
+
+Early trend variants (`flex.py`, E07-E10) used the *same session's* final close in
+the moving-average filter while entering at 17:01 CT. That is intraday leakage.
+Scores up to 0.57 and total PnL up to $700k were artefacts. After lagging the filter
+by one session (E11) the same family is flat to negative. This is the single most
+important negative result: session-scale trend filters on this evaluator must be
+lagged, and any large score from an unlagged filter is invalid.
+
+## Surviving candidate mechanism
+
+MNQ intraday momentum, causal:
+
+* reference = 17:00 CT session open (known at entry),
+* decision bar = 10:00 CT close, using the 09:59 CT close vs the session open,
+* sign-matched 5 MNQ (0.5 NQ equivalent) filled at the 10:01 CT open,
+* close-based $800 dollar stop, flat for the rest of the session once hit,
+* flat from the 15:09 CT open; no overnight inventory, no 08:30-09:30 CT entries.
+
+Development (2019-05..2023-12, stressed): total $42,377.50, positive years
+2020/2021/2022 (3), yearly pass rates 0.255/0.378/0.330/0.214/0.223,
+worst-three mean 0.2307, entry-time diversity pass (all entries at 10:01 CT).
+2019 and 2023 are negative: the effect is not stable, so development score is not
+evidence of deployable profitability. Expected OOS risk: the Nasdaq 2019-2023
+intraday continuation premium need not persist in 2024-2025.
+
+Variants screened and rejected: unconditional RTH long, overnight-only hold,
+long-only follow, asymmetric short sleeve, vol-targeted sizing (zero-pass years),
+12:01/11:01/09:41 entries, 14:00/15:00 exits, thresholds on overnight magnitude,
+other roots (MES, M2K, NQ, ES, MGC, MCL all negative after costs).
