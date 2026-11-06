@@ -51,3 +51,21 @@ Variants screened and rejected: unconditional RTH long, overnight-only hold,
 long-only follow, asymmetric short sleeve, vol-targeted sizing (zero-pass years),
 12:01/11:01/09:41 entries, 14:00/15:00 exits, thresholds on overnight magnitude,
 other roots (MES, M2K, NQ, ES, MGC, MCL all negative after costs).
+
+## Frozen finalists (all three independently reproduced on the trusted evaluator, 200 nulls)
+
+| rank | file sha256 | rule | stressed dev PnL | pos. years | worst-3 pass | null p |
+|---|---|---|---|---|---|---|
+| 1 | fa2f9cd96198b782839f1998bea51f6f1353b611e331c79e45fb2e13ee2538b2 | MNQ long 5 / short 5, stop $800 | +42,377.50 | 3 | 0.23067 | 0.004975 |
+| 2 | 8ea10fdc0a85154fe819d013e9a56b3e5ac82eb828dbfdbefdb9d12bc69fcba9 | MNQ long 5 / short 2, stop $600 | +36,081.25 | 4 | 0.22178 | 0.004975 |
+| 3 | 5e44a520479a25791c08adb3960b30665857a25fbbc099a14a846c271f28f1ea | MNQ long 8 only when 09:59 CT > 17:00 CT open, stop $600 | +55,886.00 | 4 | 0.15470 | 0.024876 |
+
+All enter at 10:01 CT, flat from 15:09 CT, MNQ only, max exposure 0.5/0.8 standard
+equivalents, 0% of entries inside 08:30-09:30 CT.
+
+Robustness (E21-E25): stop 600/800/1000/none -> 0.197/0.231/0.204/0.204; size
+3/4/5/6 -> 0.162/0.215/0.231/0.196; entry 09:56/10:01/10:06 -> 0.220/0.231/0.188;
+base-cost PnL 53.3k/43.9k/65.4k; late 2022-2023 PnL +10.7k/+25.0k/+26.4k;
+flat control exactly 0, sign-flipped F1 -106,269. Selection of q=5/stop=$800 is a
+local optimum inside a smooth neighbourhood, so residual selection bias remains.
+Ranking is development-only and does not imply sealed-validation performance.
