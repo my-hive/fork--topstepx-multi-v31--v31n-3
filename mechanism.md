@@ -69,3 +69,9 @@ base-cost PnL 53.3k/43.9k/65.4k; late 2022-2023 PnL +10.7k/+25.0k/+26.4k;
 flat control exactly 0, sign-flipped F1 -106,269. Selection of q=5/stop=$800 is a
 local optimum inside a smooth neighbourhood, so residual selection bias remains.
 Ranking is development-only and does not imply sealed-validation performance.
+
+## Sealed validation submissions (receipts only, no metrics returned or requested)
+
+All three frozen files submitted with `--symbols MNQ`; receipts accepted with the
+exact SHA256 values above, remaining quota 2 -> 1 -> 0. No candidate was modified
+after freezing and no submission was retried.
