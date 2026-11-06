@@ -10,7 +10,7 @@ beyond 0.5 standard equivalents.
 """
 import numpy as np
 
-QTY = 5               # MNQ contracts = 0.5 NQ equivalents
+QTY = 8               # MNQ contracts = 0.5 NQ equivalents
 STOP = 600.0          # dollars, close-based, same session
 ENTRY = 86400 + 36060  # 10:01 CT in session-relative seconds (17:00 CT = 61200)
 EXIT = 86400 + 54540   # 15:09 CT bar close
@@ -46,9 +46,13 @@ def signals(panel):
             base = c[j - 2]            # last close at or before 09:59 CT
             if base == reference:
                 continue
-            qty = QTY if base > reference else -2
+            qty = QTY if base > reference else 0
+            if qty == 0:
+                continue
             if j == en:
                 out[j - 1] = qty       # decision bar present, entry bar truncated
+                continue
+            if qty == 0:
                 continue
             e = st + np.searchsorted(t[st:en], EXIT)
             out[j - 1:en] = qty        # target at bar i fills at open of bar i+1
