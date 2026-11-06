@@ -40,20 +40,26 @@ def signals(panel):
             # produce the same target on bar j-1 as the full panel does.
             if j - 2 < st or j - 1 >= en:
                 continue
+            if j == en and t[en - 1] != ENTRY - 60:
+                continue  # panel ends before the 10:00 CT decision bar
             reference = o[st]          # 17:00 CT session open, already known
             base = c[j - 2]            # last close at or before 09:59 CT
             if base == reference:
                 continue
             qty = QTY if base > reference else -QTY
-            e = min(st + np.searchsorted(t[st:en], EXIT), en)
-            out[j - 1] = qty           # target at bar i fills at open of bar i+1
-            out[j:e - 1] = qty
+            if j == en:
+                out[j - 1] = qty       # decision bar present, entry bar truncated
+                continue
+            e = st + np.searchsorted(t[st:en], EXIT)
+            out[j - 1:en] = qty        # target at bar i fills at open of bar i+1
+            if e < en:
+                out[e - 1:en] = 0      # flat from the 15:09 CT open
             if j >= en:
                 continue
             basis = o[j]
-            for i in range(j, e - 1):
+            for i in range(j, min(e, en) - 1):
                 if qty * (c[i] - basis) * POINT_VALUE <= -STOP:
-                    out[i:e - 1] = 0   # stop on close i, flat from open i+1
+                    out[i:en] = 0      # stop on close i, flat from open i+1
                     break
         result[symbol] = out
     return result
